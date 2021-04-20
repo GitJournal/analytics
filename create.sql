@@ -10,31 +10,36 @@ CREATE TABLE events
   `user_pseudo_id` UUID,
   `user_properties` Array(Tuple(String, String)),
 
-  /* Should I use nested instead - Not supported by offical go driver - YES! Makes importing easier */
+  `device` Nested(
+    `category` LowCardinality(String),
+    `mobile_brand_name` LowCardinality(String),
+    `mobile_model_name` LowCardinality(String),
+    `mobile_marketing_name` LowCardinality(String),
+    `mobile_os_hardware_model` LowCardinality(String),
+    `operating_system` LowCardinality(String),
+    `operating_system_version` LowCardinality(String),
+    `language` LowCardinality(String),
+    `time_zone_offset_seconds` Int16
+  ),
 
-  `device.category` LowCardinality(String),
-  `device.mobile_brand_name` LowCardinality(String),
-  `device.mobile_model_name` LowCardinality(String),
-  `device.mobile_marketing_name` LowCardinality(String),
-  `device.mobile_os_hardware_model` LowCardinality(String),
-  `device.operating_system` LowCardinality(String),
-  `device.operating_system_version` LowCardinality(String),
-  `device.language` LowCardinality(String),
-  `device.time_zone_offset_seconds` Int16,
+  `geo` Nested(
+    `continent` LowCardinality(String),
+    `country` LowCardinality(String),
+    `region` LowCardinality(String),
+    `city` LowCardinality(String),
+    `sub_continent` LowCardinality(String),
+    `metro` LowCardinality(String)
+  ),
 
-  `geo.continent` LowCardinality(String),
-  `geo.country` LowCardinality(String),
-  `geo.region` LowCardinality(String),
-  `geo.city` LowCardinality(String),
-  `geo.sub_continent` LowCardinality(String),
-  `geo.metro` LowCardinality(String),
-
-  `app_info.id` LowCardinality(String),
-  `app_info.version` LowCardinality(String),
+  `app_info` Nested(
+    `id` LowCardinality(String),
+    `version` LowCardinality(String)
+  ),
 
   `stream_id` Int64,
   `platform` LowCardinality(String)
 )
+
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(`timestamp`)
 ORDER BY (`timestamp`)

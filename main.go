@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
+	"strconv"
 )
 
 type Device struct {
@@ -58,12 +58,12 @@ type firebaseEvent struct {
 
 type EventDBSchema struct {
 	Timestamp string `json:"timestamp"`
-	Name      string `json:"event_name"`
+	Name      string `json:"name"`
 
 	Params [][]string `json:"params"`
 
-	PreviousTimestamp time.Time `json:"previous_timestamp"`
-	BundleSequenceId  int32     `json:"bundle_sequence_id"`
+	PreviousTimestamp string `json:"previous_timestamp"`
+	BundleSequenceId  int32  `json:"bundle_sequence_id"`
 
 	UserPseudoId string     `json:"user_pseudo_id"`
 	UserProps    [][]string `json:"user_properties"`
@@ -103,18 +103,31 @@ func mapParams(p []Info) [][]string {
 }
 
 func mapEvent(e firebaseEvent) EventDBSchema {
+	bundleSeq, err := strconv.ParseInt(e.EventBundleSequenceID, 10, 32)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	streamID, err := strconv.ParseInt(e.StreamID, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return EventDBSchema{
-		Timestamp: e.EventTimestamp,
-		Name:      e.EventName,
-		Params:    mapParams(e.EventParams),
-		// prev timestmp
-		// BundleSequenceId: e.EventBundleSequenceID,
-		UserPseudoId: e.UserPseudoID,
-		UserProps:    mapParams(e.UserProperties),
-		Device:       e.Device,
-		Geo:          e.Geo,
-		AppInfo:      e.AppInfo,
+		Timestamp:         e.EventTimestamp,
+		Name:              e.EventName,
+		Params:            mapParams(e.EventParams),
+		PreviousTimestamp: e.EventPreviousTimestamp,
+
+		BundleSequenceId: int32(bundleSeq),
+		UserPseudoId:     e.UserPseudoID,
+		UserProps:        mapParams(e.UserProperties),
+		Device:           e.Device,
+		Geo:              e.Geo,
+		AppInfo:          e.AppInfo,
+
+		StreamID: streamID,
+		Platform: e.Platform,
 	}
 }
 
