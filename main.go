@@ -57,13 +57,13 @@ type firebaseEvent struct {
 }
 
 type EventDBSchema struct {
-	Timestamp string `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
 	Name      string `json:"name"`
 
 	Params [][]string `json:"params"`
 
-	PreviousTimestamp string `json:"previous_timestamp"`
-	BundleSequenceId  int32  `json:"bundle_sequence_id"`
+	PreviousTimestamp int64 `json:"previous_timestamp,omitempty"`
+	BundleSequenceId  int32 `json:"bundle_sequence_id"`
 
 	UserPseudoId string     `json:"user_pseudo_id"`
 	UserProps    [][]string `json:"user_properties"`
@@ -127,11 +127,24 @@ func mapEvent(e firebaseEvent) EventDBSchema {
 		log.Fatal(err)
 	}
 
+	timestamp, err := strconv.ParseInt(e.EventTimestamp, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	timestamp /= 1000000
+
+	prevTimestamp, err := strconv.ParseInt(e.EventPreviousTimestamp, 10, 64)
+	if err != nil {
+		prevTimestamp = 0
+	} else {
+		prevTimestamp /= 1000000
+	}
+
 	return EventDBSchema{
-		Timestamp:         e.EventTimestamp,
+		Timestamp:         timestamp,
 		Name:              e.EventName,
 		Params:            mapParams(e.EventParams),
-		PreviousTimestamp: e.EventPreviousTimestamp,
+		PreviousTimestamp: prevTimestamp,
 
 		BundleSequenceId: int32(bundleSeq),
 		UserPseudoId:     e.UserPseudoID,
