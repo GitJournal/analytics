@@ -68,11 +68,25 @@ type EventDBSchema struct {
 	UserPseudoId string     `json:"user_pseudo_id"`
 	UserProps    [][]string `json:"user_properties"`
 
-	// user props
+	DeviceCategory               string `json:"device.category"`
+	DeviceMobileBrandName        string `json:"device.mobile_brand_name"`
+	DeviceMobileModelName        string `json:"device.mobile_model_name"`
+	DeviceMobileMarketingName    string `json:"device.mobile_marketing_name"`
+	DeviceMobileOsHardwareModel  string `json:"device.mobile_os_hardware_model"`
+	DeviceOperatingSystem        string `json:"device.operating_system"`
+	DeviceOperatingSystemVersion string `json:"device.operating_system_version"`
+	DeviceLanguage               string `json:"device.language"`
+	DeviceTimeZoneOffsetSeconds  string `json:"device.time_zone_offset_seconds"`
 
-	Device  `json:"device"`
-	Geo     `json:"geo"`
-	AppInfo `json:"app_info"`
+	GeoContinent    string `json:"geo.continent"`
+	GeoCountry      string `json:"geo.country"`
+	GeoRegion       string `json:"geo.region"`
+	GeoCity         string `json:"geo.city"`
+	GeoSubContinent string `json:"geo.sub_continent"`
+	GeoMetro        string `json:"geo.metro"`
+
+	AppInfoID      string `json:"app_info.id"`
+	AppInfoVersion string `json:"app_info.version"`
 
 	StreamID int64  `json:"stream_id"`
 	Platform string `json:"platform"`
@@ -122,9 +136,26 @@ func mapEvent(e firebaseEvent) EventDBSchema {
 		BundleSequenceId: int32(bundleSeq),
 		UserPseudoId:     e.UserPseudoID,
 		UserProps:        mapParams(e.UserProperties),
-		Device:           e.Device,
-		Geo:              e.Geo,
-		AppInfo:          e.AppInfo,
+
+		DeviceCategory:               e.Device.Category,
+		DeviceMobileBrandName:        e.Device.MobileBrandName,
+		DeviceMobileModelName:        e.Device.MobileModelName,
+		DeviceMobileMarketingName:    e.Device.MobileMarketingName,
+		DeviceMobileOsHardwareModel:  e.Device.MobileOsHardwareModel,
+		DeviceOperatingSystem:        e.Device.OperatingSystem,
+		DeviceOperatingSystemVersion: e.Device.OperatingSystemVersion,
+		DeviceLanguage:               e.Device.Language,
+		DeviceTimeZoneOffsetSeconds:  e.Device.TimeZoneOffsetSeconds,
+
+		GeoContinent:    e.Geo.Continent,
+		GeoCountry:      e.Geo.Country,
+		GeoRegion:       e.Geo.Region,
+		GeoCity:         e.Geo.City,
+		GeoSubContinent: e.Geo.SubContinent,
+		GeoMetro:        e.Geo.Metro,
+
+		AppInfoID:      e.AppInfo.ID,
+		AppInfoVersion: e.AppInfo.Version,
 
 		StreamID: streamID,
 		Platform: e.Platform,
