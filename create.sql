@@ -10,7 +10,8 @@ CREATE TABLE events
   `user_pseudo_id` UUID,
   `user_properties` Array(Tuple(String, String)),
 
-  /* Should I use nested instead - Not supported by offical go driver */
+  /* Should I use nested instead - Not supported by offical go driver - YES! Makes importing easier */
+
   `device.category` LowCardinality(String),
   `device.mobile_brand_name` LowCardinality(String),
   `device.mobile_model_name` LowCardinality(String),

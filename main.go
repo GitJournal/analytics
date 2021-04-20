@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -34,53 +35,39 @@ type AppInfo struct {
 	// InstallSource string `json:"install_source"`
 }
 
+type Info map[string]interface{}
+
 type firebaseEvent struct {
-	EventDate      string `json:"event_date"`
-	EventTimestamp string `json:"event_timestamp"`
-	EventName      string `json:"event_name"`
-	EventParams    []struct {
-		Key         string `json:"key"`
-		StringValue struct {
-			StringValue string `json:"string_value"`
-		} `json:"value,omitempty"`
-		IntValue struct {
-			IntValue string `json:"int_value"`
-		} `json:"value,omitempty"`
-	} `json:"event_params"`
+	EventDate                  string `json:"event_date"`
+	EventTimestamp             string `json:"event_timestamp"`
+	EventName                  string `json:"event_name"`
+	EventParams                []Info `json:"event_params"`
 	EventPreviousTimestamp     string `json:"event_previous_timestamp"`
 	EventBundleSequenceID      string `json:"event_bundle_sequence_id"`
 	EventServerTimestampOffset string `json:"event_server_timestamp_offset"`
 	UserPseudoID               string `json:"user_pseudo_id"`
-	UserProperties             []struct {
-		Key         string `json:"key"`
-		StringValue struct {
-			StringValue        string `json:"string_value"`
-			SetTimestampMicros string `json:"set_timestamp_micros"`
-		} `json:"value,omitempty"`
-		IntValue struct {
-			IntValue           string `json:"int_value"`
-			SetTimestampMicros string `json:"set_timestamp_micros"`
-		} `json:"value,omitempty"`
-	} `json:"user_properties"`
-	UserFirstTouchTimestamp string `json:"user_first_touch_timestamp"`
-	Device                  `json:"device"`
-	Geo                     `json:"geo"`
-	AppInfo                 `json:"app_info"`
-	StreamID                string        `json:"stream_id"`
-	Platform                string        `json:"platform"`
-	Items                   []interface{} `json:"items"`
+	UserProperties             []Info `json:"user_properties"`
+	UserFirstTouchTimestamp    string `json:"user_first_touch_timestamp"`
+	Device                     `json:"device"`
+	Geo                        `json:"geo"`
+	AppInfo                    `json:"app_info"`
+	StreamID                   string        `json:"stream_id"`
+	Platform                   string        `json:"platform"`
+	Items                      []interface{} `json:"items"`
 }
 
 type EventDBSchema struct {
 	Timestamp string `json:"timestamp"`
 	Name      string `json:"event_name"`
 
-	// `params` Array(Tuple(String, String)),
+	Params [][]string `json:"params"`
 
 	PreviousTimestamp time.Time `json:"previous_timestamp"`
 	BundleSequenceId  int32     `json:"bundle_sequence_id"`
 
-	UserPseudoId string `json:"user_pseudo_id"`
+	UserPseudoId string     `json:"user_pseudo_id"`
+	UserProps    [][]string `json:"user_properties"`
+
 	// user props
 
 	Device  `json:"device"`
@@ -91,13 +78,40 @@ type EventDBSchema struct {
 	Platform string `json:"platform"`
 }
 
+func mapParams(p []Info) [][]string {
+	a := make([][]string, len(p))
+	for i := range a {
+		prop := p[i]
+		a[i] = make([]string, 2)
+		a[i][0] = prop["key"].(string)
+
+		val := prop["value"].(map[string]interface{})
+		if stringVal, ok := val["string_value"]; ok {
+			a[i][1] = stringVal.(string)
+		}
+		if intVal, ok := val["int_value"]; ok {
+			a[i][1] = intVal.(string)
+		}
+
+		if len(a[i][1]) == 0 {
+			fmt.Println(prop)
+			log.Panic("Why is the prop value empty?")
+		}
+	}
+
+	return a
+}
+
 func mapEvent(e firebaseEvent) EventDBSchema {
+
 	return EventDBSchema{
 		Timestamp: e.EventTimestamp,
 		Name:      e.EventName,
+		Params:    mapParams(e.EventParams),
 		// prev timestmp
 		// BundleSequenceId: e.EventBundleSequenceID,
 		UserPseudoId: e.UserPseudoID,
+		UserProps:    mapParams(e.UserProperties),
 		Device:       e.Device,
 		Geo:          e.Geo,
 		AppInfo:      e.AppInfo,
@@ -118,6 +132,13 @@ func main() {
 			log.Fatal(err)
 		}
 
+		ne := mapEvent(e)
+		bytes, err := json.Marshal(ne)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(string(bytes))
 		//fmt.Println(e)
 	}
 	if s.Err() != nil {
