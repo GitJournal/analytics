@@ -1,8 +1,10 @@
-module github.com/GitJournal/firebase_replacement
+module github.com/gitjournal/analytics_backend
 
-go 1.15
+go 1.16
 
 require (
 	github.com/ClickHouse/clickhouse-go v1.4.3
 	github.com/mailru/go-clickhouse v1.5.0
+	google.golang.org/grpc v1.39.0 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
 )
