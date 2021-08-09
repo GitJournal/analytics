@@ -8,6 +8,7 @@ import (
 
 	pb "github.com/gitjournal/analytics_backend/protos"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 
 	"github.com/oschwald/geoip2-golang"
 )
@@ -21,6 +22,9 @@ type server struct {
 }
 
 func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.AnalyticsReply, error) {
+	p, _ := peer.FromContext(ctx)
+	fmt.Println(p.Addr.String())
+
 	log.Printf("Received: %v %v", in.GetAppId(), len(in.GetEvents()))
 
 	return &pb.AnalyticsReply{}, nil
