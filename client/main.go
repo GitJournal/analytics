@@ -15,7 +15,7 @@ import (
 
 const (
 	// address = "127.0.0.1:8080"
-	address = "https://analyticsbackend-wetu2tkdpq-ew.a.run.app:8080"
+	address = "analyticsbackend-wetu2tkdpq-ew.a.run.app:443"
 )
 
 func main() {
@@ -31,10 +31,12 @@ func main() {
 	opts = append(opts, grpc.WithTransportCredentials(cred))
 	opts = append(opts, grpc.WithBlock())
 
+	fmt.Println("Trying to connect")
 	conn, err := grpc.Dial(address, opts...)
 	if err != nil {
 		log.Printf("Failed to dial: %v", err)
 	}
+	fmt.Println("Done dailing")
 
 	defer conn.Close()
 
