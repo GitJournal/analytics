@@ -23,14 +23,18 @@ type server struct {
 
 func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.AnalyticsReply, error) {
 	p, _ := peer.FromContext(ctx)
-	fmt.Println(p.Addr.String())
+	addr, ok := p.Addr.(*net.TCPAddr)
+	if !ok {
+		log.Fatal("Could not get IP")
+	}
 
-	log.Printf("Received: %v %v", in.GetAppId(), len(in.GetEvents()))
+	// ip, err := net.ResolveIPAddr(p.Addr.Network(), p.Addr.String())
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	return &pb.AnalyticsReply{}, nil
-}
+	// fmt.Println("What the hell?", ip)
 
-func main() {
 	db, err := geoip2.Open("./GeoLite2-City.mmdb")
 	if err != nil {
 		log.Fatal(err)
@@ -38,8 +42,8 @@ func main() {
 	defer db.Close()
 
 	// If you are using strings that may be invalid, check that ip is not nil
-	ip := net.ParseIP("81.2.69.142")
-	record, err := db.City(ip)
+	record, err := db.City(addr.IP)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,6 +56,12 @@ func main() {
 	fmt.Printf("Time zone: %v\n", record.Location.TimeZone)
 	fmt.Printf("Coordinates: %v, %v\n", record.Location.Latitude, record.Location.Longitude)
 
+	log.Printf("Received: %v %v", in.GetAppId(), len(in.GetEvents()))
+
+	return &pb.AnalyticsReply{}, nil
+}
+
+func main() {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
