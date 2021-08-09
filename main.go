@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 
 	pb "github.com/gitjournal/analytics_backend/protos"
@@ -13,10 +14,6 @@ import (
 	"google.golang.org/grpc/peer"
 
 	"github.com/oschwald/geoip2-golang"
-)
-
-const (
-	port = ":50051"
 )
 
 type server struct {
@@ -76,7 +73,13 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 }
 
 func main() {
-	lis, err := net.Listen("tcp", port)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
+	}
+
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
