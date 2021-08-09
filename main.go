@@ -16,6 +16,8 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
+const dbPath = "GeoLite2-City.mmdb"
+
 type server struct {
 	pb.UnimplementedAnalyticsServiceServer
 }
@@ -45,9 +47,9 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 
 	// fmt.Println("What the hell?", ip)
 
-	db, err := geoip2.Open("./GeoLite2-City.mmdb")
+	db, err := geoip2.Open(dbPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Opening GeoLit2 db:", err)
 	}
 	defer db.Close()
 
@@ -73,6 +75,10 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 }
 
 func main() {
+	if !fileExists(dbPath) {
+		log.Fatalf("GeoLite db not found")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -89,4 +95,12 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
