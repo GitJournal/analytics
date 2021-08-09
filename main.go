@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 
 	pb "github.com/gitjournal/analytics_backend/protos"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 
 	"github.com/oschwald/geoip2-golang"
@@ -27,6 +29,17 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 	if !ok {
 		log.Fatal("Could not get IP")
 	}
+	clientIP := addr.IP
+
+	if headers, ok := metadata.FromIncomingContext(ctx); ok {
+		xForwardFor := headers.Get("x-forwarded-for")
+		if len(xForwardFor) > 0 && xForwardFor[0] != "" {
+			ips := strings.Split(xForwardFor[0], ",")
+			if len(ips) > 0 {
+				clientIP = net.ParseIP(ips[0])
+			}
+		}
+	}
 
 	// ip, err := net.ResolveIPAddr(p.Addr.Network(), p.Addr.String())
 	// if err != nil {
@@ -42,7 +55,8 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 	defer db.Close()
 
 	// If you are using strings that may be invalid, check that ip is not nil
-	record, err := db.City(addr.IP)
+	fmt.Println("Client IP", clientIP.To4().String())
+	record, err := db.City(clientIP)
 
 	if err != nil {
 		log.Fatal(err)
