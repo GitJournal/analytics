@@ -14,25 +14,32 @@ import (
 )
 
 const (
-	// address = "127.0.0.1:8080"
-	address = "analyticsbackend-wetu2tkdpq-ew.a.run.app:443"
+	address  = "analyticsbackend-wetu2tkdpq-ew.a.run.app:443"
+	useLocal = true
 )
 
 func main() {
-	// conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
-	var opts []grpc.DialOption
-	systemRoots, err := x509.SystemCertPool()
-	if err != nil {
-		log.Fatal(err)
-	}
-	cred := credentials.NewTLS(&tls.Config{
-		RootCAs: systemRoots,
-	})
-	opts = append(opts, grpc.WithTransportCredentials(cred))
-	opts = append(opts, grpc.WithBlock())
+	var conn *grpc.ClientConn
+	var err error
 
-	fmt.Println("Trying to connect")
-	conn, err := grpc.Dial(address, opts...)
+	if useLocal {
+		conn, err = grpc.Dial("127.0.0.1:8080", grpc.WithInsecure(), grpc.WithBlock())
+	} else {
+		var opts []grpc.DialOption
+		systemRoots, err := x509.SystemCertPool()
+		if err != nil {
+			log.Fatal(err)
+		}
+		cred := credentials.NewTLS(&tls.Config{
+			RootCAs: systemRoots,
+		})
+		opts = append(opts, grpc.WithTransportCredentials(cred))
+		opts = append(opts, grpc.WithBlock())
+
+		fmt.Println("Trying to connect")
+		conn, err = grpc.Dial(address, opts...)
+	}
+
 	if err != nil {
 		log.Printf("Failed to dial: %v", err)
 	}
