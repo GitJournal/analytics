@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"strings"
@@ -14,19 +13,21 @@ import (
 func postgresConnect(ctx context.Context) (*pgx.Conn, error) {
 	passwordBytes, err := os.ReadFile("secrets/postgres")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Could not read postgres secret: %v\n", err)
+		os.Exit(1)
 	}
 
 	password := string(passwordBytes)
 	password = strings.TrimSuffix(password, "\n")
 	password = url.QueryEscape(password)
 
-	//url := fmt.Sprintf("postgresql://postgres:%s@db.tefpmcttotopcptdivsj.supabase.co:5432/postgres", password)
-	url := fmt.Sprintf("postgresql://postgres:%s@127.0.0.1:5432/postgres", "vish_")
+	url := fmt.Sprintf("postgresql://postgres:%s@db.tefpmcttotopcptdivsj.supabase.co:5432/postgres", password)
+	// url := fmt.Sprintf("postgresql://postgres:%s@127.0.0.1:5432/postgres", "vish_")
 
 	cfg, err := pgx.ParseConfig(url)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Could not parse postgres config: %v\n", err)
+		os.Exit(1)
 	}
 
 	conn, err := pgx.ConnectConfig(ctx, cfg)
