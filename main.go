@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	pb "github.com/gitjournal/analytics_backend/protos"
+	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -17,6 +18,8 @@ import (
 )
 
 const dbPath = "GeoLite2-City.mmdb"
+
+var conn *pgx.Conn
 
 type server struct {
 	pb.UnimplementedAnalyticsServiceServer
@@ -53,16 +56,11 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Portuguese (BR) city name: %v\n", record.City.Names["pt-BR"])
-	if len(record.Subdivisions) > 0 {
-		fmt.Printf("English subdivision name: %v\n", record.Subdivisions[0].Names["en"])
-	}
-	fmt.Printf("Russian country name: %v\n", record.Country.Names["ru"])
-	fmt.Printf("ISO country code: %v\n", record.Country.IsoCode)
-	fmt.Printf("Time zone: %v\n", record.Location.TimeZone)
-	fmt.Printf("Coordinates: %v, %v\n", record.Location.Latitude, record.Location.Longitude)
 
-	log.Printf("Received: %v %v", in.GetAppId(), len(in.GetEvents()))
+	err = insertIntoPostgres(ctx, conn, record, in)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &pb.AnalyticsReply{}, nil
 }
@@ -82,8 +80,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	conn, err = postgresConnect()
+	if err != nil {
+		log.Fatalf("failed to connect to postgres: %v", err)
+	}
+
 	s := grpc.NewServer()
 	pb.RegisterAnalyticsServiceServer(s, &server{})
+
 	log.Printf("server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
