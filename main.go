@@ -19,6 +19,7 @@ import (
 const dbPath = "GeoLite2-City.mmdb"
 
 var conn *pgx.Conn
+var geoDb *geoip2.Reader
 
 type server struct {
 	pb.UnimplementedAnalyticsServiceServer
@@ -42,14 +43,7 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 		}
 	}
 
-	// FIXME: Avoid reloading the db for each request
-	db, err := geoip2.Open(dbPath)
-	if err != nil {
-		log.Fatal("Opening GeoLit2 db:", err)
-	}
-	defer db.Close()
-
-	record, err := db.City(clientIP)
+	record, err := geoDb.City(clientIP)
 	if err != nil {
 		return &pb.AnalyticsReply{}, err
 	}
@@ -63,14 +57,20 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 }
 
 func main() {
+	var err error
 	if !fileExists(dbPath) {
 		log.Fatalf("GeoLite db not found")
 	}
 
+	geoDb, err = geoip2.Open(dbPath)
+	if err != nil {
+		log.Fatal("Opening GeoLit2 db:", err)
+	}
+	defer geoDb.Close()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
-		log.Printf("Defaulting to port %s", port)
 	}
 
 	lis, err := net.Listen("tcp", ":"+port)
@@ -83,12 +83,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to postgres: %v", err)
 	}
+	defer conn.Close(ctx)
 	log.Printf("Connected to Postgres")
 
 	s := grpc.NewServer()
 	pb.RegisterAnalyticsServiceServer(s, &server{})
 
-	log.Printf("server listening at %v", lis.Addr())
+	log.Printf("Server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
