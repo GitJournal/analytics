@@ -11,14 +11,17 @@ import (
 )
 
 func postgresConnect(ctx context.Context) (*pgx.Conn, error) {
-	passwordBytes, err := os.ReadFile("secrets/postgres")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not read postgres secret: %v\n", err)
-		os.Exit(1)
-	}
+	password := os.Getenv("PGPASSWORD")
+	if password == "" {
+		passwordBytes, err := os.ReadFile("secrets/postgres")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Could not read postgres secret: %v\n", err)
+			os.Exit(1)
+		}
 
-	password := string(passwordBytes)
-	password = strings.TrimSuffix(password, "\n")
+		password = string(passwordBytes)
+		password = strings.TrimSuffix(password, "\n")
+	}
 	password = url.QueryEscape(password)
 
 	url := fmt.Sprintf("postgresql://postgres:%s@db.tefpmcttotopcptdivsj.supabase.co:5432/postgres", password)
