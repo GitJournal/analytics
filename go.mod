@@ -7,11 +7,13 @@ require (
 	github.com/Joker/jade v1.0.0 // indirect
 	github.com/flosch/pongo2 v0.0.0-20190707114632-bbf5a6c351f4 // indirect
 	github.com/gavv/monotime v0.0.0-20190418164738-30dba4353424 // indirect
-	github.com/getsentry/sentry-go v0.11.0 // indirect
+	github.com/getsentry/sentry-go v0.11.0
 	github.com/gorilla/schema v1.1.0 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/iris-contrib/formBinder v5.0.0+incompatible // indirect
 	github.com/iris-contrib/httpexpect v0.0.0-20180314041918-ebe99fcebbce // indirect
 	github.com/jackc/pgx/v4 v4.13.0
+	github.com/johnbellone/grpc-middleware-sentry v0.2.0
 	github.com/kataras/iris v11.1.1+incompatible // indirect
 	github.com/mailru/go-clickhouse v1.5.0
 	github.com/oschwald/geoip2-golang v1.5.0

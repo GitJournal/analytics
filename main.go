@@ -16,6 +16,9 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/oschwald/geoip2-golang"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 )
 
 const dbPath = "GeoLite2-City.mmdb"
@@ -97,7 +100,14 @@ func main() {
 	defer conn.Close(ctx)
 	log.Printf("Connected to Postgres")
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_sentry.StreamServerInterceptor(),
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_sentry.UnaryServerInterceptor(),
+		)),
+	)
 	pb.RegisterAnalyticsServiceServer(s, &server{})
 
 	log.Printf("Server listening at %v", lis.Addr())
