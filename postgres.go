@@ -6,12 +6,21 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/jackc/pgx/v4"
 )
 
 func main() {
-	password := url.QueryEscape("foo")
+	passwordBytes, err := os.ReadFile("secrets/postgres")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	password := string(passwordBytes)
+	password = strings.TrimSuffix(password, "\n")
+	password = url.QueryEscape(password)
+
 	url := fmt.Sprintf("postgresql://postgres:%s@db.tefpmcttotopcptdivsj.supabase.co:5432/postgres", password)
 
 	cfg, err := pgx.ParseConfig(url)
