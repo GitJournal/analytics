@@ -41,6 +41,5 @@ create table analytics_package_info (
 create table analytics_location (
   city_geoname_id integer primary key,
   city_name_en text not null,
-  country_code char[2] not null,
+  country_code text not null
 );
-

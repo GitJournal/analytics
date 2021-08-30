@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -43,23 +42,21 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 		}
 	}
 
+	// FIXME: Avoid reloading the db for each request
 	db, err := geoip2.Open(dbPath)
 	if err != nil {
 		log.Fatal("Opening GeoLit2 db:", err)
 	}
 	defer db.Close()
 
-	// If you are using strings that may be invalid, check that ip is not nil
-	fmt.Println("Client IP", clientIP.To4().String())
 	record, err := db.City(clientIP)
-
 	if err != nil {
-		log.Fatal(err)
+		return &pb.AnalyticsReply{}, err
 	}
 
 	err = insertIntoPostgres(ctx, conn, record, in)
 	if err != nil {
-		log.Fatal(err)
+		return &pb.AnalyticsReply{}, err
 	}
 
 	return &pb.AnalyticsReply{}, nil
@@ -81,10 +78,12 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	conn, err = postgresConnect()
+	ctx := context.Background()
+	conn, err = postgresConnect(ctx)
 	if err != nil {
 		log.Fatalf("failed to connect to postgres: %v", err)
 	}
+	log.Printf("Connected to Postgres")
 
 	s := grpc.NewServer()
 	pb.RegisterAnalyticsServiceServer(s, &server{})

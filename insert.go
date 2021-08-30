@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	analytics_backend "github.com/gitjournal/analytics_backend/protos"
 	pb "github.com/gitjournal/analytics_backend/protos"
@@ -40,9 +41,9 @@ func insertIntoPostgres(ctx context.Context, conn *pgx.Conn, cityInfo *geoip2.Ci
 
 	platform := analytics_backend.Platform_name[int32(di.Platform)]
 
-	_, err = tx.Exec(ctx, "insert into analytics_device_info(id, platform, android_info, ios_info, linux_info, macos_info, windows_info, web_info) values (?, ?, ?, ?, ?, ?, ?, ?)", deviceID, platform, android, ios, linux, macos, windows, web)
+	_, err = tx.Exec(ctx, "insert into analytics_device_info(id, platform, android_info, ios_info, linux_info, macos_info, windows_info, web_info) values ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING", deviceID, platform, android, ios, linux, macos, windows, web)
 	if err != nil {
-		return err
+		return fmt.Errorf("insert analytics_device_info failed: %w", err)
 	}
 
 	//
@@ -50,30 +51,36 @@ func insertIntoPostgres(ctx context.Context, conn *pgx.Conn, cityInfo *geoip2.Ci
 	//
 	packageId, err := getPackageID(in)
 	if err != nil {
-		return err
+		return fmt.Errorf("getPackageID failed: %w", err)
 	}
 	pi := in.PackageInfo
 
-	_, err = tx.Exec(ctx, "insert into analytics_package_info(id, appName, packageName, version, buildNumber, buildSignature) values (?, ?, ?, ?, ?, ?)", packageId, pi.AppName, pi.PackageName, pi.Version, pi.BuildNumber, pi.BuildSignature)
+	_, err = tx.Exec(ctx, "insert into analytics_package_info(id, appName, packageName, version, buildNumber, buildSignature) values ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING", packageId, pi.AppName, pi.PackageName, pi.Version, pi.BuildNumber, pi.BuildSignature)
 	if err != nil {
-		return err
+		return fmt.Errorf("insert analytics_package_info failed: %w", err)
 	}
 
 	//
 	// Location
 	//
 	locID := getLocationID(cityInfo)
-	_, err = tx.Exec(ctx, "insert into analytics_location(city_geoname_id, city_name_en, country_code) VALUES (?, ?, ?)", locID, cityInfo.City.Names["en"], cityInfo.Country.IsoCode)
+
+	_, err = tx.Exec(ctx, "insert into analytics_location(city_geoname_id, city_name_en, country_code) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", locID, cityInfo.City.Names["en"], cityInfo.Country.IsoCode)
+	if err != nil {
+		return fmt.Errorf("insert analytics_location failed: %w", err)
+	}
 
 	//
 	// Analytics
 	//
-	_, err = tx.Prepare(ctx, "analytics_insert", "insert into analytics_events(ts, event_name, props, pseudoId, userId, user_props, session_id, location_id, device_id, package_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	sql := "insert into analytics_events(ts, event_name, props, pseudoId, userId, user_props, session_id, location_id, device_id, package_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 
 	for _, ev := range in.Events {
-		_, err := tx.Exec(ctx, "analytics_insert", ev.Date, ev.Name, ev.Params, ev.UserId, ev.PseudoId, ev.UserProperties, ev.SessionID, locID, deviceID, packageId)
+		time := time.Unix(int64(ev.Date), 0)
+
+		_, err := tx.Exec(ctx, sql, time, ev.Name, ev.Params, ev.PseudoId, ev.UserId, ev.UserProperties, ev.SessionID, locID, deviceID, packageId)
 		if err != nil {
-			return err
+			return fmt.Errorf("insert analytics_insert failed: %w", err)
 		}
 	}
 

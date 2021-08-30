@@ -44,10 +44,47 @@ func main() {
 	defer cancel()
 
 	client := pb.NewAnalyticsServiceClient(conn)
-	reply, err := client.SendData(ctx, &pb.AnalyticsMessage{AppId: "io.gitjournal-go"})
+	reply, err := client.SendData(ctx, createMessage())
 	if err != nil {
 		log.Printf("Failed to send: %v", err)
 	}
 
 	fmt.Println(reply)
+}
+
+func createMessage() *pb.AnalyticsMessage {
+	device := &pb.DeviceInfo{
+		Platform: pb.Platform_android,
+		DeviceInfo: &pb.DeviceInfo_AndroidDeviceInfo{
+			AndroidDeviceInfo: &pb.AndroidDeviceInfo{
+				Board: "board",
+			},
+		},
+	}
+
+	packageInfo := &pb.PackageInfo{
+		AppName:        "GitJournal",
+		PackageName:    "io.gitjournal.gitjournal",
+		Version:        "version",
+		BuildNumber:    "123",
+		BuildSignature: "signature",
+	}
+
+	events := []*pb.Event{
+		{
+			Name:      "test_event",
+			Date:      1630323711,
+			PseudoId:  "uuid",
+			SessionID: 123,
+		},
+	}
+
+	msg := &pb.AnalyticsMessage{
+		AppId:       "io.gitjournal",
+		DeviceInfo:  device,
+		PackageInfo: packageInfo,
+		Events:      events,
+	}
+
+	return msg
 }
