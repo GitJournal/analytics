@@ -40,13 +40,6 @@ func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.Ana
 		}
 	}
 
-	// ip, err := net.ResolveIPAddr(p.Addr.Network(), p.Addr.String())
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// fmt.Println("What the hell?", ip)
-
 	db, err := geoip2.Open(dbPath)
 	if err != nil {
 		log.Fatal("Opening GeoLit2 db:", err)
