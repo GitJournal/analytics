@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	pb "github.com/gitjournal/analytics_backend/protos"
 	"github.com/jackc/pgx/v4"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/oschwald/geoip2-golang"
 )
 
@@ -77,6 +79,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	err = sentry.Init(sentry.ClientOptions{
+		Dsn:   "https://05ea3a469a04409db1eac1e6daf73479@o366485.ingest.sentry.io/5937572",
+		Debug: true,
+	})
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+	defer sentry.Flush(2 * time.Second)
 
 	ctx := context.Background()
 	conn, err = postgresConnect(ctx)
