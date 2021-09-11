@@ -10,6 +10,13 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+const (
+	host = "db.kokulrmhlfxdwuvcmblj.supabase.co"
+	port = "5432"
+	user = "postgres"
+	db   = "postgres"
+)
+
 func postgresConnect(ctx context.Context) (*pgx.Conn, error) {
 	password := os.Getenv("PGPASSWORD")
 	if password == "" {
@@ -24,7 +31,7 @@ func postgresConnect(ctx context.Context) (*pgx.Conn, error) {
 	}
 	password = url.QueryEscape(password)
 
-	url := fmt.Sprintf("postgresql://postgres:%s@db.tefpmcttotopcptdivsj.supabase.co:5432/postgres", password)
+	url := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", user, password, host, port, db)
 	// url := fmt.Sprintf("postgresql://postgres:%s@127.0.0.1:5432/postgres", "vish_")
 
 	cfg, err := pgx.ParseConfig(url)
