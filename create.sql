@@ -9,14 +9,14 @@ create table analytics_events (
 
   session_id integer not null,
   location_id integer not null,
-  device_id integer not null,
-  package_id integer not null
+  device_id bigint not null,
+  package_id bigint not null
 );
 
 CREATE TYPE valid_platform AS ENUM ('android', 'ios', 'linux', 'macos', 'windows', 'web');
 
 create table analytics_device_info (
-  id integer primary key,
+  id bigint primary key,
 
   platform valid_platform,
 
@@ -29,7 +29,7 @@ create table analytics_device_info (
 );
 
 create table analytics_package_info (
-  id integer primary key,
+  id bigint primary key,
 
   appName text not null,
   packageName text not null,
