@@ -43,3 +43,6 @@ create table analytics_location (
   city_name_en text not null,
   country_code text not null
 );
+
+alter table analytics_package_info add installSource text not null;
+

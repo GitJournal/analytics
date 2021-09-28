@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2021 Vishesh Handa <me@vhanda.in>
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
 syntax = "proto3";
 
 package gitjournal;
@@ -57,6 +63,7 @@ message PackageInfo {
   string version = 3;
   string buildNumber = 4;
   string buildSignature = 5;
+  string installSource = 6;
 }
 
 enum Platform {

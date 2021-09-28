@@ -1,7 +1,3 @@
-#protoc --go_out=. --go_opt=paths=source_relative \
-#    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-#    protos/analytics.proto
-
 MAXMIND=$(shell cat secrets/maxmind)
 HEAD_SHA=$(shell git rev-parse --short HEAD)
 PGPASSWORD=$(shell cat secrets/postgres)
@@ -18,3 +14,11 @@ push:
 
 deploy:
 	gcloud run deploy analyticsbackend --image gcr.io/gitjournal-io/analytics_backend
+
+.PHONY: protos
+
+protos:
+	protoc --go_out=. --go_opt=paths=source_relative \
+        --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+        protos/analytics.proto
+

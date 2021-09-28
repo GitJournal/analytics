@@ -55,7 +55,7 @@ func insertIntoPostgres(ctx context.Context, conn *pgx.Conn, cityInfo *geoip2.Ci
 	}
 	pi := in.PackageInfo
 
-	_, err = tx.Exec(ctx, "insert into analytics_package_info(id, appName, packageName, version, buildNumber, buildSignature) values ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING", packageId, pi.AppName, pi.PackageName, pi.Version, pi.BuildNumber, pi.BuildSignature)
+	_, err = tx.Exec(ctx, "insert into analytics_package_info(id, appName, packageName, version, buildNumber, buildSignature, installSource) values ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING", packageId, pi.AppName, pi.PackageName, pi.Version, pi.BuildNumber, pi.BuildSignature, pi.InstallSource)
 	if err != nil {
 		return fmt.Errorf("insert analytics_package_info failed: %w", err)
 	}
