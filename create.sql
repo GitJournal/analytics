@@ -46,3 +46,4 @@ create table analytics_location (
 
 alter table analytics_package_info add installSource text not null;
 
+CREATE INDEX events_index_name ON analytics_events (event_name);
