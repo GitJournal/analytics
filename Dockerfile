@@ -21,7 +21,6 @@ ARG HEAD_SHA
 ARG PGPASSWORD
 
 ENV SENTRY_RELEASE=$HEAD_SHA
-ENV PGPASSWORD=$PGPASSWORD
 
 ARG MAXMIND_LICENSE_KEY
 RUN curl -f -o GeoLite2-City.tar.gz "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=$MAXMIND_LICENSE_KEY&suffix=tar.gz" && \
