@@ -2,32 +2,25 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/jackc/pgx/v4"
 )
 
 const (
-	host = "db.kokulrmhlfxdwuvcmblj.supabase.co"
+	host = "postgres"
 	port = "5432"
 	user = "postgres"
-	db   = "postgres"
+	db   = "gitjournal_analytics"
 )
 
 func postgresConnect(ctx context.Context) (*pgx.Conn, error) {
-	password := os.Getenv("PGPASSWORD")
+	password := os.Getenv("POSTGRES_PASSWORD")
 	if password == "" {
-		passwordBytes, err := os.ReadFile("secrets/postgres")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Could not read postgres secret: %v\n", err)
-			os.Exit(1)
-		}
-
-		password = string(passwordBytes)
-		password = strings.TrimSuffix(password, "\n")
+		return nil, errors.New("Postgres Password Missing")
 	}
 	password = url.QueryEscape(password)
 
