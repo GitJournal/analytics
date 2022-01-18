@@ -5,13 +5,10 @@ build:
 	docker build \
 		--build-arg MAXMIND_LICENSE_KEY="$(MAXMIND)" \
 		--build-arg HEAD_SHA="$(HEAD_SHA)" \
-		-t "gcr.io/gitjournal-io/analytics_backend" .
+		-t "ghcr.io/gitjournal/analytics_backend:latest" .
 
 push:
-	docker push gcr.io/gitjournal-io/analytics_backend:latest
-
-deploy:
-	gcloud run deploy analyticsbackend --image gcr.io/gitjournal-io/analytics_backend
+	docker push "ghcr.io/gitjournal/analytics_backend:latest"
 
 .PHONY: protos
 

@@ -1,7 +1,0 @@
-steps:
-- name: gcr.io/cloud-builders/docker
-  args: ["build", "-t", "gcr.io/gitjournal-io/analytics_backend", '--build-arg=MAXMIND_LICENSE_KEY=$_MAXMIND_LICENSE_KEY', "."]
-images:
-- gcr.io/gitjournal-io/analytics_backend
-substitutions:
-  _MAXMIND_LICENSE_KEY:
