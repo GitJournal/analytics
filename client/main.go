@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	pb "github.com/gitjournal/analytics_backend/protos"
+	pb "github.com/gitjournal/analytics_backend/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

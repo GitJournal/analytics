@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/gitjournal/analytics_backend/protos"
+	"github.com/gitjournal/analytics_backend/pb"
 	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

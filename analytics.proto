@@ -8,7 +8,7 @@ syntax = "proto3";
 
 package gitjournal;
 
-option go_package = "github.com/gitjournal/analytics_backend";
+option go_package = "github.com/gitjournal/analytics_backend/pb";
 
 service AnalyticsService {
   rpc SendData(AnalyticsMessage) returns (AnalyticsReply) {}

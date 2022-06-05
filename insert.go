@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	analytics_backend "github.com/gitjournal/analytics_backend/protos"
-	pb "github.com/gitjournal/analytics_backend/protos"
+	"github.com/gitjournal/analytics_backend/pb"
 	"github.com/oschwald/geoip2-golang"
 
 	"github.com/jackc/pgx/v4"
@@ -39,7 +38,7 @@ func insertIntoPostgres(ctx context.Context, conn *pgx.Conn, cityInfo *geoip2.Ci
 	windows, _ := json.Marshal(di.GetWindowsDeviceInfo())
 	web, _ := json.Marshal(di.GetWebBrowserInfo())
 
-	platform := analytics_backend.Platform_name[int32(di.Platform)]
+	platform := pb.Platform_name[int32(di.Platform)]
 
 	_, err = tx.Exec(ctx, "insert into analytics_device_info(id, platform, android_info, ios_info, linux_info, macos_info, windows_info, web_info) values ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING", deviceID, platform, android, ios, linux, macos, windows, web)
 	if err != nil {
