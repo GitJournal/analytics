@@ -1,4 +1,4 @@
-FROM golang:1.18-buster as builder
+FROM golang:1.18 as builder
 
 WORKDIR /app
 COPY go.* ./
@@ -6,6 +6,9 @@ RUN go mod download
 
 # Copy local code to the container image.
 COPY . ./
+
+# Deps
+RUN apt-get update && apt-get install -y git-crypt
 
 # Build the binary.
 RUN go build -v -o server
