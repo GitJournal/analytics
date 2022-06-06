@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	// address  = "analytics.gitjournal.io"
-	address  = "127.0.0.1:8080"
+	// address  = "https://analytics.gitjournal.io"
+	address  = "http://127.0.0.1:8080"
 	path     = "/v1/sendData"
 	useLocal = true
 )
@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 
-	req, err := http.NewRequest("http://"+address+path, "application/x-protobuf", bytes.NewBuffer(reqBytes))
+	req, err := http.NewRequest(address+path, "application/x-protobuf", bytes.NewBuffer(reqBytes))
 	if err != nil {
 		log.Fatalf("An Error Occured %v", err)
 		return
