@@ -2,23 +2,20 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/gitjournal/analytics_backend/pb"
 	"github.com/jackc/pgx/v4"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/oschwald/geoip2-golang"
-
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 )
 
 const dbPath = "GeoLite2-City.mmdb"
@@ -26,39 +23,69 @@ const dbPath = "GeoLite2-City.mmdb"
 var conn *pgx.Conn
 var geoDb *geoip2.Reader
 
-type server struct {
-	pb.UnimplementedAnalyticsServiceServer
+func SendDataHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		http.Error(w, "Only POSTs are accepted.", http.StatusBadRequest)
+		return
+	}
+
+	clientIP, err := getIP(req)
+	if err != nil {
+		http.Error(w, "IP not found.", http.StatusBadRequest)
+		return
+	}
+
+	bodyBytes, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		http.Error(w, "Errir reading body", http.StatusBadRequest)
+		return
+	}
+
+	msg := &pb.AnalyticsMessage{}
+	if err := proto.Unmarshal(bodyBytes, msg); err != nil {
+		http.Error(w, "Failed to parse message: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ctx := req.Context()
+	err = sendData(ctx, clientIP, msg)
+	if err != nil {
+		http.Error(w, "Failed to sendData: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-func (s *server) SendData(ctx context.Context, in *pb.AnalyticsMessage) (*pb.AnalyticsReply, error) {
-	p, _ := peer.FromContext(ctx)
-	addr, ok := p.Addr.(*net.TCPAddr)
-	if !ok {
-		log.Fatal("Could not get IP")
-	}
-	clientIP := addr.IP
-
-	if headers, ok := metadata.FromIncomingContext(ctx); ok {
-		xForwardFor := headers.Get("x-forwarded-for")
-		if len(xForwardFor) > 0 && xForwardFor[0] != "" {
-			ips := strings.Split(xForwardFor[0], ",")
-			if len(ips) > 0 {
-				clientIP = net.ParseIP(ips[0])
-			}
+func getIP(req *http.Request) (net.IP, error) {
+	xForwardFor := req.Header.Get("X-Forwarded-For")
+	if xForwardFor != "" {
+		ips := strings.Split(xForwardFor, ",")
+		if len(ips) > 0 {
+			return net.ParseIP(ips[0]), nil
 		}
 	}
 
+	ip, _, err := net.SplitHostPort(req.RemoteAddr)
+	if err != nil {
+		return net.IP{}, err
+	}
+
+	return net.ParseIP(ip), nil
+}
+
+func sendData(ctx context.Context, clientIP net.IP, in *pb.AnalyticsMessage) error {
 	record, err := geoDb.City(clientIP)
 	if err != nil {
-		return &pb.AnalyticsReply{}, err
+		return err
 	}
 
 	err = insertIntoPostgres(ctx, conn, record, in)
 	if err != nil {
-		return &pb.AnalyticsReply{}, err
+		return err
 	}
 
-	return &pb.AnalyticsReply{}, nil
+	return nil
 }
 
 func main() {
@@ -72,16 +99,6 @@ func main() {
 		log.Fatal("Opening GeoLit2 db:", err)
 	}
 	defer geoDb.Close()
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	lis, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
 
 	err = sentry.Init(sentry.ClientOptions{
 		Dsn:   "https://05ea3a469a04409db1eac1e6daf73479@o366485.ingest.sentry.io/5937572",
@@ -100,18 +117,15 @@ func main() {
 	defer conn.Close(ctx)
 	log.Printf("Connected to Postgres")
 
-	s := grpc.NewServer(
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			grpc_sentry.StreamServerInterceptor(),
-		)),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_sentry.UnaryServerInterceptor(),
-		)),
-	)
-	pb.RegisterAnalyticsServiceServer(s, &server{})
+	http.HandleFunc("/v1/sendData", SendDataHandler)
 
-	log.Printf("Server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	err = http.ListenAndServe(":"+port, nil)
+	if err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
