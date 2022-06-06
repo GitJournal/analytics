@@ -10,12 +10,6 @@ package gitjournal;
 
 option go_package = "github.com/gitjournal/analytics_backend/pb";
 
-service AnalyticsService {
-  rpc SendData(AnalyticsMessage) returns (AnalyticsReply) {}
-}
-
-message AnalyticsReply {}
-
 message AnalyticsMessage {
   string appId = 1;
   repeated Event events = 2;
