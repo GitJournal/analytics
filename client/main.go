@@ -30,11 +30,12 @@ func main() {
 		return
 	}
 
-	req, err := http.NewRequest(address+path, "application/x-protobuf", bytes.NewBuffer(reqBytes))
+	req, err := http.NewRequest(http.MethodPost, address+path, bytes.NewBuffer(reqBytes))
 	if err != nil {
 		log.Fatalf("An Error Occured %v", err)
 		return
 	}
+	req.Header.Add("Content-Type", "application/x-protobuf")
 	req = req.WithContext(ctx)
 
 	client := http.DefaultClient

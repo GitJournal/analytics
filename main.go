@@ -14,8 +14,10 @@ import (
 	"github.com/jackc/pgx/v4"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/oschwald/geoip2-golang"
+
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 )
 
 const dbPath = "GeoLite2-City.mmdb"
@@ -117,7 +119,8 @@ func main() {
 	defer conn.Close(ctx)
 	log.Printf("Connected to Postgres")
 
-	http.HandleFunc("/v1/sendData", SendDataHandler)
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+	http.HandleFunc("/v1/sendData", sentryHandler.HandleFunc(SendDataHandler))
 
 	port := os.Getenv("PORT")
 	if port == "" {
