@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/getsentry/sentry-go v0.11.0
-	github.com/gogo/protobuf v1.3.2
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/twmb/murmur3 v1.1.6
