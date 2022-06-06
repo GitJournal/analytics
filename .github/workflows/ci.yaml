@@ -34,6 +34,6 @@ jobs:
           push: true
           build-args: |
             MAXMIND_LICENSE_KEY=${{ secrets.MAXMIND_LICENSE_KEY }}"
-            HEAD_SHA=${{ env.GITHUB_SHA }}
+            HEAD_SHA=${{ github.sha }}
           tags: |
-            ghcr.io/gitjournal/analytics_backend:lates
+            ghcr.io/gitjournal/analytics_backend:latest
