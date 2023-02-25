@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/getsentry/sentry-go v0.11.0
+	github.com/gogo/protobuf v1.3.2
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/twmb/murmur3 v1.1.6
@@ -20,6 +21,6 @@ require (
 	github.com/jackc/pgtype v1.8.1 // indirect
 	github.com/oschwald/maxminddb-golang v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.3.6 // indirect
 )
